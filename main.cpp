@@ -43,6 +43,7 @@ void main(int argc, char *argv[]){
 	FILE *out = NULL;
 	BYTE *buf = NULL;
 	BYTE tbuf[MAX_PATH];
+	DWORD namelen = 0;
 	char magic[3];
 	int filesize = 0;
 	int base = 0;
@@ -55,14 +56,16 @@ void main(int argc, char *argv[]){
 	in = fopen(argv[1], "rb");
 	//in = fopen("a8ee1ea5054ab67499f383cba54c090c", "rb");
 	
-	fseek(in, 0x1004, SEEK_SET);
-	if(ftell(in)!=0x1004)
+	fseek(in, 0x1000, SEEK_SET);
+	if(ftell(in)!=0x1000)
 		return;
+
+	fread(&namelen, 4, 1, in);
 	
-	fread(tbuf, 1, 24, in);
-	fseek(in, 0x1004, SEEK_SET);
-	SUP_CopyString(tbuf, title);
-	
+	//fread(tbuf, 1, 24, in);
+	//fseek(in, 0x1000, SEEK_SET);
+	//SUP_CopyString(tbuf, title);
+	fread(&title, namelen, 1, in);
 	strcpy(outfn, title);
 	strcat(outfn, ".mp3");
 	SUP_FileExists(outfn);
