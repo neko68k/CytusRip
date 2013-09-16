@@ -1,6 +1,46 @@
 #include <Windows.h>
 #include <stdio.h>
 
+// need to look more into imports section 0x44 in 5af0a116b391d7648a7706755254209c
+// all hash codes are 0x20 long
+
+typedef struct{
+	DWORD unk1;
+	DWORD filesize;
+	DWORD unk2;			// version? always 9?
+	DWORD ofs;			// offset to TOC data
+	DWORD unk3;			// null pad?
+	char verString[14];	// newline terminated version string with null padding	
+	DWORD null1;
+	DWORD null2;
+	DWORD numFiles;
+}UNITY_DATA_HEADER;
+
+typedef struct{
+	
+	DWORD fileNum;	
+	DWORD unk5;			
+	DWORD fileSize;	// includes its own sub-header in this size
+	DWORD type;		// sometimes 0xFFFFFFFF but subtype still set.
+					// mp3 0x53, tex 0x1C, step chart 0x31
+	DWORD subtype;	// not always same as above
+}UNITY_DATA_TOC;	
+
+typedef struct{
+	DWORD filenameSize;
+	char *filename;		// null padded to nearest DWORD
+	BYTE unk2;			// null pad?
+	DWORD unk1[5];		// never change? 0x02000000,0x0D000000x,0x00010000,0x01000000
+
+}UNITY_MP3_HEADER;
+
+typedef struct{
+	DWORD filenameSize;
+	char filename;	// null padded to nearest DWORD
+
+
+}UNITY_IMG_HEADER;
+
 void SUP_CopyString(BYTE *inPtr, char *outStr)
 {
 	char temp[1];
@@ -54,7 +94,6 @@ void main(int argc, char *argv[]){
 	memset(title, 0, MAX_PATH);
 	memset(tbuf, 0, MAX_PATH);
 	in = fopen(argv[1], "rb");
-	//in = fopen("a8ee1ea5054ab67499f383cba54c090c", "rb");
 	
 	fseek(in, 0x1000, SEEK_SET);
 	if(ftell(in)!=0x1000)
@@ -62,9 +101,6 @@ void main(int argc, char *argv[]){
 
 	fread(&namelen, 4, 1, in);
 	
-	//fread(tbuf, 1, 24, in);
-	//fseek(in, 0x1000, SEEK_SET);
-	//SUP_CopyString(tbuf, title);
 	fread(&title, namelen, 1, in);
 	strcpy(outfn, title);
 	strcat(outfn, ".mp3");
