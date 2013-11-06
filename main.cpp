@@ -19,7 +19,6 @@ typedef struct{
 typedef struct{
 	
 	DWORD fileNum;	
-	DWORD unk5;			
 	DWORD fileSize;	// includes its own sub-header in this size
 	DWORD type;		// sometimes 0xFFFFFFFF but subtype still set.
 					// mp3 0x53, tex 0x1C, step chart 0x31
@@ -28,9 +27,9 @@ typedef struct{
 
 typedef struct{
 	DWORD filenameSize;
-	char *filename;		// null padded to nearest DWORD
-	BYTE unk2;			// null pad?
-	DWORD unk1[5];		// never change? 0x02000000,0x0D000000x,0x00010000,0x01000000
+	char *filename;		// null padded to nearest DWORD	
+	DWORD unk1[4];		// never change? 0x02000000,0x0D000000x,0x00010000,0x01000000
+	DWORD fileSize;
 
 }UNITY_MP3_HEADER;
 
@@ -40,6 +39,50 @@ typedef struct{
 
 
 }UNITY_IMG_HEADER;
+
+#define UNITY_MP3 0x53
+void SUP_FileExists(char *fn);
+
+void doIt(char *fn){
+	
+	BYTE *buf = NULL;
+	UNITY_DATA_HEADER unityHdr;
+	UNITY_DATA_TOC *unityToc;
+	UNITY_MP3_HEADER mp3Hdr;
+	FILE *out = NULL;
+	FILE *in = fopen(fn, "rb");
+
+	fread(&unityHdr, sizeof(UNITY_DATA_HEADER), 1, in);
+	unityToc = (UNITY_DATA_TOC*)calloc(1,sizeof(UNITY_DATA_TOC)*unityHdr.numFiles);
+	for(int i =0;i<unityHdr.numFiles;i++){
+		fread(&unityToc[i], sizeof(UNITY_DATA_TOC), 1, in);
+	}
+	fseek(in, 0x1000, SEEK_SET);
+	for(int i =0;i<unityHdr.numFiles;i++){
+		if(unityToc[i].type==UNITY_MP3){
+			//fread(buf, unityToc[i].fileSize, 1, in);
+			fread(&mp3Hdr.filenameSize, 4, 1, in);
+			mp3Hdr.filename = (char*)calloc(1,mp3Hdr.filenameSize+5);
+			fread(mp3Hdr.filename, mp3Hdr.filenameSize, 1, in);
+			strcat(mp3Hdr.filename, ".mp3");
+			SUP_FileExists(mp3Hdr.filename);
+			if(ftell(in)%4!=0)
+				fseek(in, 4-(ftell(in)%4), SEEK_CUR);
+			fread(mp3Hdr.unk1, 4*4, 1, in);
+			fread(&mp3Hdr.fileSize, 4, 1, in);
+			buf = (BYTE*)malloc(mp3Hdr.fileSize);
+			out = fopen(mp3Hdr.filename, "wb");
+			fread(buf, mp3Hdr.fileSize, 1, in);
+			fwrite(buf, mp3Hdr.fileSize, 1, out);			
+			fclose(out);
+			fclose(in);
+			free(buf);
+			free(mp3Hdr.filename);
+		}
+	}
+
+	free(unityToc);
+}
 
 void SUP_CopyString(BYTE *inPtr, char *outStr)
 {
@@ -79,7 +122,9 @@ void SUP_FileExists(char *fn){
 }
 
 void main(int argc, char *argv[]){
-	FILE *in = NULL;
+	doIt(argv[1]);
+	//doIt("a8ee1ea5054ab67499f383cba54c090c");
+	/*FILE *in = NULL;
 	FILE *out = NULL;
 	BYTE *buf = NULL;
 	BYTE tbuf[MAX_PATH];
@@ -121,7 +166,7 @@ void main(int argc, char *argv[]){
 	fclose(out);
 	fclose(in);
 	free(buf);
-
+	*/
 	
 	return;
 }
