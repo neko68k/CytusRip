@@ -60,7 +60,6 @@ void doIt(char *fn){
 	fseek(in, 0x1000, SEEK_SET);
 	for(int i =0;i<unityHdr.numFiles;i++){
 		if(unityToc[i].type==UNITY_MP3){
-			//fread(buf, unityToc[i].fileSize, 1, in);
 			fread(&mp3Hdr.filenameSize, 4, 1, in);
 			mp3Hdr.filename = (char*)calloc(1,mp3Hdr.filenameSize+5);
 			fread(mp3Hdr.filename, mp3Hdr.filenameSize, 1, in);
@@ -82,21 +81,6 @@ void doIt(char *fn){
 	}
 
 	free(unityToc);
-}
-
-void SUP_CopyString(BYTE *inPtr, char *outStr)
-{
-	char temp[1];
-	memcpy(temp, inPtr, 1);
-	char *cpyStr = outStr;
-	while(strcmp(temp, "\0") != 0)
-	{
-		memcpy(cpyStr, temp, 1);
-		cpyStr++;
-		inPtr++;
-		memcpy(temp, inPtr, 1);
-	}
-	memcpy(cpyStr, temp, 1);
 }
 
 void SUP_FileExists(char *fn){
@@ -123,50 +107,6 @@ void SUP_FileExists(char *fn){
 
 void main(int argc, char *argv[]){
 	doIt(argv[1]);
-	//doIt("a8ee1ea5054ab67499f383cba54c090c");
-	/*FILE *in = NULL;
-	FILE *out = NULL;
-	BYTE *buf = NULL;
-	BYTE tbuf[MAX_PATH];
-	DWORD namelen = 0;
-	char magic[3];
-	int filesize = 0;
-	int base = 0;
-	char title[MAX_PATH];
-	char c;
-	char outfn[MAX_PATH];
 
-	memset(title, 0, MAX_PATH);
-	memset(tbuf, 0, MAX_PATH);
-	in = fopen(argv[1], "rb");
-	
-	fseek(in, 0x1000, SEEK_SET);
-	if(ftell(in)!=0x1000)
-		return;
-
-	fread(&namelen, 4, 1, in);
-	
-	fread(&title, namelen, 1, in);
-	strcpy(outfn, title);
-	strcat(outfn, ".mp3");
-	SUP_FileExists(outfn);
-
-
-	fseek(in, strlen(title)+0x15, SEEK_CUR);
-	base = ftell(in);
-	fseek(in, 0, SEEK_END);
-	filesize = ftell(in)-base;
-	fseek(in, base, SEEK_SET);
-	buf = (BYTE*)calloc(filesize, 1);
-
-	fread(buf, 1, filesize, in);
-
-	out = fopen(outfn, "wb");
-	fwrite(buf, 1, filesize, out);
-	fclose(out);
-	fclose(in);
-	free(buf);
-	*/
-	
 	return;
 }
