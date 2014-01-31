@@ -41,6 +41,7 @@ typedef struct{
 }UNITY_IMG_HEADER;
 
 #define UNITY_MP3 0x53
+#define UNITY_NOTE 0x31
 void SUP_FileExists(char *fn);
 
 void doIt(char *fn){
@@ -68,6 +69,25 @@ void doIt(char *fn){
 			if(ftell(in)%4!=0)
 				fseek(in, 4-(ftell(in)%4), SEEK_CUR);
 			fread(mp3Hdr.unk1, 4*4, 1, in);
+			fread(&mp3Hdr.fileSize, 4, 1, in);
+			buf = (BYTE*)malloc(mp3Hdr.fileSize);
+			out = fopen(mp3Hdr.filename, "wb");
+			fread(buf, mp3Hdr.fileSize, 1, in);
+			fwrite(buf, mp3Hdr.fileSize, 1, out);			
+			fclose(out);
+			fclose(in);
+			free(buf);
+			free(mp3Hdr.filename);
+		}
+		if(unityToc[i].type==UNITY_NOTE){
+			fread(&mp3Hdr.filenameSize, 4, 1, in);
+			mp3Hdr.filename = (char*)calloc(1,mp3Hdr.filenameSize+5);
+			fread(mp3Hdr.filename, mp3Hdr.filenameSize, 1, in);
+			strcat(mp3Hdr.filename, ".not");
+			SUP_FileExists(mp3Hdr.filename);
+			if(ftell(in)%4!=0)
+				fseek(in, 4-(ftell(in)%4), SEEK_CUR);
+			//fread(mp3Hdr.unk1, 4*4, 1, in);
 			fread(&mp3Hdr.fileSize, 4, 1, in);
 			buf = (BYTE*)malloc(mp3Hdr.fileSize);
 			out = fopen(mp3Hdr.filename, "wb");
@@ -107,6 +127,7 @@ void SUP_FileExists(char *fn){
 
 void main(int argc, char *argv[]){
 	doIt(argv[1]);
+	//doIt("025a67ca0b4cbd544a7f12bcae8a5365.dat");
 
 	return;
 }
