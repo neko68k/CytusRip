@@ -41,7 +41,7 @@ typedef struct{
 }UNITY_IMG_HEADER;
 
 #define UNITY_MP3 0x53
-#define UNITY_NOTE 0x31
+#define CYTUS_NOTE 0x31
 void SUP_FileExists(char *fn);
 
 void doIt(char *fn){
@@ -79,7 +79,7 @@ void doIt(char *fn){
 			free(buf);
 			free(mp3Hdr.filename);
 		}
-		if(unityToc[i].type==UNITY_NOTE){
+		if(unityToc[i].type==CYTUS_NOTE){
 			fread(&mp3Hdr.filenameSize, 4, 1, in);
 			mp3Hdr.filename = (char*)calloc(1,mp3Hdr.filenameSize+5);
 			fread(mp3Hdr.filename, mp3Hdr.filenameSize, 1, in);
